@@ -2,7 +2,7 @@
 
 ## Responsibility
 
-React SPA with 4 screens. Sends HTTP requests to the API layer and displays products, cart status, checkout results, and step-by-step trace information.
+React SPA with 5 screens. Sends HTTP requests to the API layer and displays products, cart contents, cart status, checkout results, and step-by-step trace information.
 
 ## Relationships
 
@@ -14,6 +14,7 @@ React SPA with 4 screens. Sends HTTP requests to the API layer and displays prod
 
 - **`SearchScreen`** — input form for search query and optional max price, triggers POST /api/search
 - **`ResultsScreen`** — displays product list from search results, allows user to click "Buy", shows trace sidebar
+- **`CartScreen`** — displays cart contents (product list, quantities, remove buttons, total price, checkout button)
 - **`CartStatusScreen`** — displays cart state after add-to-cart, shows automation step trace
 - **`CheckoutResultScreen`** — displays checkout form, then shows confirmation with screenshot and trace
 

@@ -14,15 +14,15 @@ export function ResultsScreen(): React.ReactElement {
 
   const products = (location.state as any)?.products ?? [];
 
-  const handleBuy = async (productId: string) => {
+  const handleBuy = async (product: any) => {
     setError('');
-    setBuyingId(productId);
+    setBuyingId(product.id);
 
     try {
       const response = await fetch('http://localhost:3000/api/buy', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId }),
+        body: JSON.stringify({ product }),
       });
 
       const data = await response.json();
@@ -31,7 +31,7 @@ export function ResultsScreen(): React.ReactElement {
         throw new Error(data.error || 'Buy failed');
       }
 
-      navigate('/cart-status', { state: { cartStatus: data.cartStatus, productId } });
+      navigate('/cart', { state: { cart: data.cart } });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       setError(message);
@@ -92,7 +92,7 @@ export function ResultsScreen(): React.ReactElement {
                 ${product.price.toFixed(2)}
               </p>
               <button
-                onClick={() => handleBuy(product.id)}
+                onClick={() => handleBuy(product)}
                 disabled={buyingId === product.id}
                 style={{
                   padding: '10px 24px',

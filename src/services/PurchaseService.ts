@@ -1,4 +1,5 @@
 import { ShippingDetails, CheckoutResult } from '../domain/Order';
+import { Product } from '../domain/Product';
 import { BaseScraper } from '../automation/BaseScraper';
 
 /**
@@ -8,18 +9,23 @@ import { BaseScraper } from '../automation/BaseScraper';
  */
 export class PurchaseService {
   private scraper: BaseScraper;
+  private cart: Product[] = [];
 
   constructor(scraper: BaseScraper) {
     this.scraper = scraper;
   }
 
   /**
-   * Add a product to the cart by its ID.
-   * @param productId - The unique identifier of the product to purchase
+   * Add a product to the cart and return the updated cart state.
+   * @param product - The product to add to the cart
+   * @returns Updated cart with all items and total price
    */
-  async buy(productId: string): Promise<void> {
+  async buy(product: Product): Promise<{ items: Product[]; totalPrice: number }> {
     try {
-      await this.scraper.addToCart(productId);
+      await this.scraper.addToCart(product.id);
+      this.cart.push(product);
+      const totalPrice = this.cart.reduce((sum, item) => sum + item.price, 0);
+      return { items: this.cart, totalPrice };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       throw new Error(`Buy failed: ${message}`);

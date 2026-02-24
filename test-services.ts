@@ -38,7 +38,7 @@ async function main(): Promise<void> {
     console.log(`Cheapest product: ${cheapest.title} ($${cheapest.price})`);
 
     console.log('Adding to cart...');
-    await purchaseService.buy(cheapest.id);
+    await purchaseService.buy(cheapest);
     console.log('Product added to cart');
 
     // Checkout

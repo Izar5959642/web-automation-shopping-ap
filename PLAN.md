@@ -27,7 +27,14 @@ src/
 | **`domain/`** | Pure TypeScript types and models. No side effects, no imports from other layers. | `Product.ts`, `Cart.ts`, `Order.ts`, `Trace.ts` |
 | **`services/`** | Orchestrates business logic. Calls automation layer through `BaseScraper` interface, applies selection policy, manages flow state. | `SearchService.ts`, `PurchaseService.ts`, `SelectionPolicy.ts` |
 | **`api/`** | Express REST routes. Generates `requestId`, delegates to services, returns structured JSON responses. | `searchRoute.ts`, `buyRoute.ts`, `checkoutRoute.ts`, `middleware/` |
-| **`ui/`** | React SPA with 4 screens. Sends requests to API, displays products and step-by-step trace info. | `SearchScreen.tsx`, `ResultsScreen.tsx`, `CartStatusScreen.tsx`, `CheckoutResultScreen.tsx` |
+| **`ui/`** | React SPA with 5 screens. Sends requests to API, displays products and step-by-step trace info. | `SearchScreen.tsx`, `ResultsScreen.tsx`, `CartScreen.tsx`, `CartStatusScreen.tsx`, `CheckoutResultScreen.tsx` |
+
+### UI Screens
+- **`SearchScreen.tsx`** — search form with query and max price inputs
+- **`ResultsScreen.tsx`** — product list with "Buy" buttons and trace sidebar
+- **`CartScreen.tsx`** — displays cart contents (product list, quantities, remove buttons, total price, checkout button)
+- **`CartStatusScreen.tsx`** — renamed to CheckoutFormScreen.tsx, shows shipping form only
+- **`CheckoutResultScreen.tsx`** — confirmation page with screenshot
 
 ### BaseScraper — Open/Closed Principle
 
@@ -81,11 +88,15 @@ User types "backpack" + max price $30
 ```
 User clicks "Buy" on a product
   → UI: POST /api/buy { productId }
-    → API: calls PurchaseService
-      → PurchaseService: applies selection policy (cheapest), calls scraper.addToCart()
-        → SwaglabsScraper: clicks "Add to cart" on the product page
-      ← returns cart state
-  ← UI renders Cart/Status Screen with automation steps
+    → API: calls PurchaseService.buy()
+      → PurchaseService: adds to cart, maintains cart state
+      → SwaglabsScraper: clicks "Add to cart"
+    ← returns { cart: { items: Product[], totalPrice: number } }
+  ← UI navigates to /cart showing:
+     - List of cart items
+     - Remove item buttons
+     - Total price
+     - 'Proceed to Checkout' button
 ```
 
 ### Checkout Flow
@@ -185,6 +196,10 @@ Each automation action is a named step:
 - **Demo credentials**: `standard_user` / `secret_sauce`
 - **Features**: Product catalog, sorting, cart, checkout with shipping form, confirmation page
 - **Advantages**: Stable DOM, designed for testing, no CAPTCHA, no rate limiting
+
+---
+
+> **Note:** Cart screen was initially missed in the original implementation. It should display actual cart contents, not just a success message.
 
 ---
 
