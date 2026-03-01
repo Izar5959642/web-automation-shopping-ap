@@ -1,18 +1,27 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
 
 /**
  * Checkout result screen that displays the final outcome of the checkout flow.
  * Shows success/failure status, the confirmation screenshot image,
  * and the full automation trace steps.
+ * Clears the cart from context and localStorage on successful checkout.
  */
 export function CheckoutResultScreen(): React.ReactElement {
   const location = useLocation();
   const navigate = useNavigate();
+  const { clearCart } = useCart();
 
   const state = location.state as any;
   const success = state?.success ?? false;
   const screenshotPath = state?.screenshotPath ?? '';
+
+  useEffect(() => {
+    if (success) {
+      clearCart();
+    }
+  }, []);
 
   return (
     <div style={{ maxWidth: 600, margin: '40px auto', padding: 24, fontFamily: 'sans-serif', textAlign: 'center' }}>

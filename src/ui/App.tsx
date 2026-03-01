@@ -5,6 +5,8 @@ import { ResultsScreen } from './screens/ResultsScreen';
 import { CartScreen } from './screens/CartScreen';
 import { CartStatusScreen } from './screens/CartStatusScreen';
 import { CheckoutResultScreen } from './screens/CheckoutResultScreen';
+import { Header } from './components/Header';
+import { useCart } from './context/CartContext';
 
 /**
  * Main application component.
@@ -16,8 +18,11 @@ import { CheckoutResultScreen } from './screens/CheckoutResultScreen';
  * - /checkout-result → CheckoutResultScreen
  */
 export function App(): React.ReactElement {
+  const { getItemCount } = useCart();
+
   return (
     <BrowserRouter>
+      <Header cartItemCount={getItemCount()} />
       <Routes>
         <Route path="/" element={<SearchScreen />} />
         <Route path="/results" element={<ResultsScreen />} />

@@ -1,12 +1,13 @@
 import React from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
 import { Product } from '../../domain/Product';
 
 /**
  * CartScreen displays the current contents of the shopping cart.
  *
- * Receives cart data from `location.state` (passed by ResultsScreen after a
- * successful POST /api/buy) or falls back to an API call if state is missing.
+ * Reads cart data from CartContext (persisted in localStorage),
+ * so it works correctly regardless of how the user navigated here.
  *
  * Displays:
  * - A list of cart items (Product[]) with title, price, and image
@@ -17,12 +18,8 @@ import { Product } from '../../domain/Product';
  * - A "Back to Search" button that navigates to /
  */
 export function CartScreen(): React.ReactElement {
-  const location = useLocation();
   const navigate = useNavigate();
-
-  const items: Product[] = (location.state as any)?.cart?.items ?? [];
-
-  const totalPrice = items.reduce((sum, item) => sum + item.price, 0);
+  const { items, totalPrice, removeItem } = useCart();
 
   return (
     <div style={{ maxWidth: 900, margin: '40px auto', padding: 24, fontFamily: 'sans-serif' }}>
@@ -72,7 +69,7 @@ export function CartScreen(): React.ReactElement {
                 </p>
                 <p style={{ margin: 0, fontSize: 14, color: '#555' }}>Quantity: 1</p>
                 <button
-                  onClick={() => console.log('Remove item:', item.id)}
+                  onClick={() => removeItem(item.id)}
                   style={{
                     padding: '8px 16px',
                     fontSize: 14,
@@ -95,7 +92,7 @@ export function CartScreen(): React.ReactElement {
               Total: ${totalPrice.toFixed(2)}
             </p>
             <button
-              onClick={() => navigate('/cart-status', { state: { cart: { items } } })}
+              onClick={() => navigate('/cart-status')}
               style={{
                 padding: '12px 32px',
                 fontSize: 16,

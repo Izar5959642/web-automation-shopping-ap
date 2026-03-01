@@ -1,20 +1,24 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
 
 /**
  * Results screen that displays the list of products returned from the search.
  * Shows product cards with title, price, and image.
- * Allows user to click "Buy" on a product, which triggers POST /api/buy.
+ * Allows user to click "Add to Cart" on a product, which triggers POST /api/buy
+ * and adds the item to cart context. Does not navigate away.
  */
 export function ResultsScreen(): React.ReactElement {
   const location = useLocation();
   const navigate = useNavigate();
+  const { addItem } = useCart();
   const [error, setError] = useState('');
   const [buyingId, setBuyingId] = useState<string | null>(null);
+  const [addedIds, setAddedIds] = useState<string[]>([]);
 
   const products = (location.state as any)?.products ?? [];
 
-  const handleBuy = async (product: any) => {
+  const handleAddToCart = async (product: any) => {
     setError('');
     setBuyingId(product.id);
 
@@ -28,10 +32,11 @@ export function ResultsScreen(): React.ReactElement {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Buy failed');
+        throw new Error(data.error || 'Failed to add to cart');
       }
 
-      navigate('/cart', { state: { cart: data.cart } });
+      addItem(product);
+      setAddedIds((prev) => [...prev, product.id]);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       setError(message);
@@ -92,21 +97,25 @@ export function ResultsScreen(): React.ReactElement {
                 ${product.price.toFixed(2)}
               </p>
               <button
-                onClick={() => handleBuy(product)}
-                disabled={buyingId === product.id}
+                onClick={() => handleAddToCart(product)}
+                disabled={buyingId === product.id || addedIds.includes(product.id)}
                 style={{
                   padding: '10px 24px',
                   fontSize: 14,
                   fontWeight: 'bold',
-                  backgroundColor: '#1976d2',
+                  backgroundColor: addedIds.includes(product.id) ? '#388e3c' : '#1976d2',
                   color: 'white',
                   border: 'none',
                   borderRadius: 4,
-                  cursor: buyingId === product.id ? 'not-allowed' : 'pointer',
+                  cursor: (buyingId === product.id || addedIds.includes(product.id)) ? 'not-allowed' : 'pointer',
                   width: '100%',
                 }}
               >
-                {buyingId === product.id ? 'Adding...' : 'Buy'}
+                {buyingId === product.id
+                  ? 'Adding...'
+                  : addedIds.includes(product.id)
+                  ? '✓ Added to Cart'
+                  : 'Add to Cart'}
               </button>
             </div>
           ))}
