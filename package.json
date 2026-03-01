@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev:api": "npx ts-node src/api/start.ts",
-    "dev:ui": "npx vite",
+    "dev:ui": "BROWSER='/mnt/c/Program Files (x86)/Google/Chrome/Application/chrome.exe' npx vite",
     "dev": "npx concurrently \"npm run dev:api\" \"npm run dev:ui\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

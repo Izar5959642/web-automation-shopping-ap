@@ -60,9 +60,7 @@ export function CartStatusScreen(): React.ReactElement {
         Back to Search
       </button>
 
-      <div style={{ padding: 16, backgroundColor: '#e8f5e9', borderRadius: 8, marginBottom: 24, textAlign: 'center' }}>
-        <h2 style={{ margin: 0, color: '#2e7d32' }}>Product added to cart successfully!</h2>
-      </div>
+
 
       <h2 style={{ marginBottom: 16 }}>Shipping Details</h2>
 

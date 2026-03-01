@@ -4,3 +4,4 @@ screenshots/
 .env
 *.log
 .DS_Store
+document_update.txt
