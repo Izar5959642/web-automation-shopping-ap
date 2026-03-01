@@ -11,10 +11,10 @@ import { useCart } from '../context/CartContext';
 export function ResultsScreen(): React.ReactElement {
   const location = useLocation();
   const navigate = useNavigate();
-  const { addItem } = useCart();
+  const { addItem, items: cartItems } = useCart();
   const [error, setError] = useState('');
   const [buyingId, setBuyingId] = useState<string | null>(null);
-  const [addedIds, setAddedIds] = useState<string[]>([]);
+  const [recentlyAddedIds, setRecentlyAddedIds] = useState<string[]>([]);
 
   const products = (location.state as any)?.products ?? [];
 
@@ -36,7 +36,10 @@ export function ResultsScreen(): React.ReactElement {
       }
 
       addItem(product);
-      setAddedIds((prev) => [...prev, product.id]);
+      setRecentlyAddedIds((prev) => [...prev, product.id]);
+      setTimeout(() => {
+        setRecentlyAddedIds((prev) => prev.filter((id) => id !== product.id));
+      }, 2000);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       setError(message);
@@ -96,27 +99,45 @@ export function ResultsScreen(): React.ReactElement {
               <p style={{ margin: 0, fontSize: 20, fontWeight: 'bold', color: '#2e7d32' }}>
                 ${product.price.toFixed(2)}
               </p>
-              <button
-                onClick={() => handleAddToCart(product)}
-                disabled={buyingId === product.id || addedIds.includes(product.id)}
-                style={{
-                  padding: '10px 24px',
-                  fontSize: 14,
-                  fontWeight: 'bold',
-                  backgroundColor: addedIds.includes(product.id) ? '#388e3c' : '#1976d2',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: 4,
-                  cursor: (buyingId === product.id || addedIds.includes(product.id)) ? 'not-allowed' : 'pointer',
-                  width: '100%',
-                }}
-              >
-                {buyingId === product.id
+              {(() => {
+                const isAdding = buyingId === product.id;
+                const justAdded = recentlyAddedIds.includes(product.id);
+                const alreadyInCart = cartItems.some((i) => i.id === product.id);
+
+                const label = isAdding
                   ? 'Adding...'
-                  : addedIds.includes(product.id)
-                  ? '✓ Added to Cart'
-                  : 'Add to Cart'}
-              </button>
+                  : justAdded
+                  ? '✓ Added'
+                  : alreadyInCart
+                  ? 'Already in Cart'
+                  : 'Add to Cart';
+
+                const bg = isAdding || (!justAdded && !alreadyInCart)
+                  ? '#1976d2'
+                  : justAdded
+                  ? '#388e3c'
+                  : '#ff9800';
+
+                return (
+                  <button
+                    onClick={() => handleAddToCart(product)}
+                    disabled={isAdding || justAdded}
+                    style={{
+                      padding: '10px 24px',
+                      fontSize: 14,
+                      fontWeight: 'bold',
+                      backgroundColor: bg,
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: 4,
+                      cursor: (isAdding || justAdded) ? 'not-allowed' : 'pointer',
+                      width: '100%',
+                    }}
+                  >
+                    {label}
+                  </button>
+                );
+              })()}
             </div>
           ))}
         </div>
