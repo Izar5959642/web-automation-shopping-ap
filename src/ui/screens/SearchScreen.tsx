@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
+import { TraceStepList } from '../components/TraceStepList';
 
 /**
  * Search screen with a form for entering a product search query
@@ -11,7 +13,9 @@ export function SearchScreen(): React.ReactElement {
   const [maxPrice, setMaxPrice] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [failedTrace, setFailedTrace] = useState<any[]>([]);
   const navigate = useNavigate();
+  const { addTraceSteps } = useCart();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,10 +35,12 @@ export function SearchScreen(): React.ReactElement {
       const data = await response.json();
 
       if (!response.ok) {
+        setFailedTrace(data.trace ?? []);
         throw new Error(data.error || 'Search failed');
       }
 
-      navigate('/results', { state: { products: data.products, requestId: data.requestId } });
+      addTraceSteps(data.trace ?? []);
+      navigate('/results', { state: { products: data.products, requestId: data.requestId, selectedProduct: data.selectedProduct } });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       setError(message);
@@ -97,6 +103,7 @@ export function SearchScreen(): React.ReactElement {
           {error}
         </div>
       )}
+      <TraceStepList steps={failedTrace} />
     </div>
   );
 }

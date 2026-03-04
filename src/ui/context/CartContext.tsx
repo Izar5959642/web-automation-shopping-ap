@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState } from 'react';
 import { Product } from '../../domain/Product';
+import { TraceStep } from '../../domain/Trace';
 
 interface CartContextValue {
   items: Product[];
@@ -8,6 +9,8 @@ interface CartContextValue {
   removeItem: (id: string) => void;
   clearCart: () => void;
   getItemCount: () => number;
+  traceSteps: TraceStep[];
+  addTraceSteps: (steps: TraceStep[]) => void;
 }
 
 const STORAGE_KEY = 'swag_cart';
@@ -33,6 +36,7 @@ const CartContext = createContext<CartContextValue | null>(null);
  */
 export function CartProvider({ children }: { children: React.ReactNode }): React.ReactElement {
   const [items, setItems] = useState<Product[]>(loadFromStorage);
+  const [traceSteps, setTraceSteps] = useState<TraceStep[]>([]);
 
   function addItem(product: Product): void {
     const next = [...items, product];
@@ -55,10 +59,14 @@ export function CartProvider({ children }: { children: React.ReactNode }): React
     return items.length;
   }
 
+  function addTraceSteps(steps: TraceStep[]): void {
+    setTraceSteps((prev) => [...prev, ...steps]);
+  }
+
   const totalPrice = items.reduce((sum, item) => sum + item.price, 0);
 
   return (
-    <CartContext.Provider value={{ items, totalPrice, addItem, removeItem, clearCart, getItemCount }}>
+    <CartContext.Provider value={{ items, totalPrice, addItem, removeItem, clearCart, getItemCount, traceSteps, addTraceSteps }}>
       {children}
     </CartContext.Provider>
   );

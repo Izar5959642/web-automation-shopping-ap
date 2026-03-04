@@ -16,7 +16,7 @@ src/
 ├── domain/           # Models: Product, Cart, Order, Trace
 ├── services/         # Business logic: SearchService, PurchaseService
 ├── api/              # Express endpoints that trigger services
-└── ui/               # React SPA (4 screens)
+└── ui/               # React SPA (5 screens + CartContext + Header)
 ```
 
 ### Layer Responsibilities
@@ -24,27 +24,31 @@ src/
 | Layer | Responsibility | Key Files |
 |-------|---------------|-----------|
 | **`automation/`** | Browser automation via Playwright. Abstract `BaseScraper` interface + concrete implementations. Selectors, explicit waits, retries, screenshots. | `BaseScraper.ts`, `SwaglabsScraper.ts`, `selectors/swaglabs.ts` |
-| **`domain/`** | Pure TypeScript types and models. No side effects, no imports from other layers. | `Product.ts`, `Cart.ts`, `Order.ts`, `Trace.ts` |
+| **`domain/`** | Pure TypeScript types and models. No side effects, no imports from other layers. | `Product.ts`, `RawProduct.ts`, `Cart.ts`, `Order.ts`, `Trace.ts` |
 | **`services/`** | Orchestrates business logic. Calls automation layer through `BaseScraper` interface, applies selection policy, manages flow state. | `SearchService.ts`, `PurchaseService.ts`, `SelectionPolicy.ts` |
-| **`api/`** | Express REST routes. Generates `requestId`, delegates to services, returns structured JSON responses. | `searchRoute.ts`, `buyRoute.ts`, `checkoutRoute.ts`, `middleware/` |
-| **`ui/`** | React SPA with 5 screens. Sends requests to API, displays products and step-by-step trace info. | `SearchScreen.tsx`, `ResultsScreen.tsx`, `CartScreen.tsx`, `CartStatusScreen.tsx`, `CheckoutResultScreen.tsx` |
+| **`api/`** | Express REST routes. Generates `requestId`, delegates to services, returns structured JSON responses. | `server.ts`, `start.ts`, `searchRoute.ts`, `buyRoute.ts`, `checkoutRoute.ts`, `middleware/` |
+| **`ui/`** | React SPA with 5 screens. Global cart state via CartContext. Sends requests to API, displays products. | `SearchScreen.tsx`, `ResultsScreen.tsx`, `CartScreen.tsx`, `CartStatusScreen.tsx`, `CheckoutResultScreen.tsx`, `context/CartContext.tsx`, `components/Header.tsx` |
 
 ### UI Screens
 - **`SearchScreen.tsx`** — search form with query and max price inputs
-- **`ResultsScreen.tsx`** — product list with "Buy" buttons and trace sidebar
+- **`ResultsScreen.tsx`** — product list with "Add to Cart" buttons; button states: Adding / ✓ Added / Already in Cart
 - **`CartScreen.tsx`** — displays cart contents (product list, quantities, remove buttons, total price, checkout button)
-- **`CartStatusScreen.tsx`** — renamed to CheckoutFormScreen.tsx, shows shipping form only
-- **`CheckoutResultScreen.tsx`** — confirmation page with screenshot
+- **`CartStatusScreen.tsx`** — shipping form (firstName, lastName, postalCode); submits to `/api/checkout`
+- **`CheckoutResultScreen.tsx`** — confirmation page with screenshot; clears cart on success
+
+### UI Components
+- **`components/Header.tsx`** — persistent header across all screens; shows cart item count badge; navigates to `/cart` on click
+- **`context/CartContext.tsx`** — global cart state via React Context; backed by `localStorage` (`swag_cart` key); provides `addItem`, `removeItem`, `clearCart`, `getItemCount`, computed `totalPrice`
 
 ### BaseScraper — Open/Closed Principle
 
 ```
 BaseScraper (abstract)
-├── login(credentials): Promise<void>
-├── search(query, filters): Promise<RawProduct[]>
+├── login(username, password): Promise<void>
+├── search(query): Promise<RawProduct[]>
 ├── addToCart(productId): Promise<void>
 ├── checkout(shippingDetails): Promise<CheckoutResult>
-└── takeScreenshot(): Promise<Buffer>
+└── takeScreenshot(filename): Promise<string>
 
 SwaglabsScraper extends BaseScraper
   └── First (and current) concrete implementation for saucedemo.com
@@ -59,13 +63,15 @@ No changes to services, api, or ui layers.
 interface RawProduct {
   id: string;          // Unique product identifier from the source site
   title: string;       // Product name/title
-  price: number;       // Numeric price value
+  price: string;       // Raw price string as scraped from DOM (e.g. "$29.99")
   currency: string;    // Currency code (e.g. "USD")
   imageUrl: string;    // Full URL to the product image
   productUrl: string;  // Full URL to the product page
   source: string;      // Source site identifier (e.g. "swaglabs")
 }
 ```
+
+> `RawProduct.price` is a string; `SearchService` normalises it to a float before returning `Product[]` (where `price` is `number`).
 
 ---
 
@@ -81,19 +87,21 @@ User types "backpack" + max price $30
       ← returns RawProduct[]
     ← SearchService normalizes prices, applies maxPrice filter, returns Product[]
   ← API returns { requestId, products, trace }
-← UI renders Results Screen + trace sidebar
+← UI renders Results Screen
 ```
 
 ### Buy Flow
 ```
-User clicks "Buy" on a product
-  → UI: POST /api/buy { productId }
-    → API: calls PurchaseService.buy()
-      → PurchaseService: adds to cart, maintains cart state
-      → SwaglabsScraper: clicks "Add to cart"
-    ← returns { cart: { items: Product[], totalPrice: number } }
-  ← UI navigates to /cart showing:
-     - List of cart items
+User clicks "Add to Cart" on a product
+  → UI: POST /api/buy { product: Product }
+    → API: calls PurchaseService.buy(product)
+      → PurchaseService: calls scraper.addToCart(product.id)
+      → SwaglabsScraper: clicks "Add to cart" button on saucedemo.com
+    ← returns { requestId, cart: { items, totalPrice }, trace }
+  ← UI calls CartContext.addItem(product) → persists to localStorage
+  ← Header badge updates with new item count
+  ← User navigates to /cart (via Header or explicit button) showing:
+     - List of cart items (from CartContext, not API response)
      - Remove item buttons
      - Total price
      - 'Proceed to Checkout' button
@@ -101,12 +109,14 @@ User clicks "Buy" on a product
 
 ### Checkout Flow
 ```
-User fills shipping form, clicks "Complete"
+User fills shipping form on CartStatusScreen, clicks "Complete Checkout"
   → UI: POST /api/checkout { firstName, lastName, postalCode }
-    → API: calls PurchaseService.checkout()
+    → API: calls PurchaseService.checkout(shippingDetails)
       → SwaglabsScraper: fills shipping form → clicks finish → takes screenshot
-    ← returns { success, screenshotPath, trace }
-  ← UI renders Checkout Result Screen with confirmation screenshot
+    ← returns { requestId, success, screenshotPath, trace }
+  ← UI navigates to /checkout-result
+  ← If success: CartContext.clearCart() called → localStorage cleared
+  ← UI renders CheckoutResultScreen with confirmation screenshot
 ```
 
 ---
@@ -122,6 +132,8 @@ User fills shipping form, clicks "Complete"
   - Empty results → return error with clear message
   - Equal prices → pick first encountered
   - Price parse failure → exclude product, log warning
+
+> **Status:** `SelectionPolicy.ts` is implemented but not yet wired into any service. `SearchService` currently returns all matching products to the UI. Integration into the buy flow is planned.
 
 ---
 
@@ -172,7 +184,7 @@ Each automation action is a named step:
 | Method | Path | Body | Returns |
 |--------|------|------|---------|
 | `POST` | `/api/search` | `{ query, maxPrice? }` | `{ requestId, products[], trace[] }` |
-| `POST` | `/api/buy` | `{ productId }` | `{ requestId, cartStatus, trace[] }` |
+| `POST` | `/api/buy` | `{ product: Product }` | `{ requestId, cart: { items: Product[], totalPrice: number }, trace[] }` |
 | `POST` | `/api/checkout` | `{ firstName, lastName, postalCode }` | `{ requestId, success, screenshotPath, trace[] }` |
 
 ---
@@ -180,13 +192,18 @@ Each automation action is a named step:
 ## 7. Testing Strategy
 
 ### Unit Tests
-- Price normalization (string → float, currency handling)
-- Selection policy (cheapest from list, empty list, equal prices)
-- Cart calculations
+- **Tool**: Vitest
+- **Location**: `src/services/__tests__/`
+- **Coverage**:
+  - Price normalization (string → float, currency handling)
+  - Selection policy (cheapest from list, empty list, equal prices)
+  - Cart calculations
 
-### E2E Test (at least 1)
-- Full flow: Search → Add to Cart → Checkout → Verify screenshot exists
-- Uses Playwright Test runner against live saucedemo.com
+### E2E Tests (at least 1)
+- **Tool**: Playwright Test
+- **Location**: `e2e/`
+- **Coverage**: Full flow: Search → Add to Cart → Checkout → Verify screenshot exists
+- Runs against live saucedemo.com
 
 ---
 
@@ -203,7 +220,41 @@ Each automation action is a named step:
 
 ---
 
-## 9. Verification
+## 9. Submission Requirements
+
+### Required Documentation Files
+
+| File | Contents |
+|------|----------|
+| `README.md` | Project overview, tech stack, setup instructions, and how to run the app and tests |
+| `AI_USAGE.md` | Description of how AI tools (e.g. Claude Code) were used during development — which tasks, what prompts, what was generated |
+| `README_AI_BUGS.md` | Bugs encountered and fixed with AI assistance — what the bug was, how AI helped diagnose or fix it |
+
+### Required Test Outputs
+
+| Output | How to Produce |
+|--------|---------------|
+| Unit test results | Run `npm test` — console output showing all Vitest tests passing |
+| E2E test results | Run `npm run test:e2e` — Playwright Test output showing the full flow passing |
+| Screenshot | Automatically saved to `screenshots/` after a successful checkout run |
+
+---
+
+## 10. Implementation Order
+
+The three remaining open requirements are completed in this order:
+
+| Order | Area | Requirements closed | Rationale |
+|-------|------|---------------------|-----------|
+| 1st | SelectionPolicy wiring | 1 | Smallest change (1 file), zero risk, no new dependencies |
+| 2nd | Observability | 2 | Medium effort, infrastructure-level, enriches the app before tests validate it |
+| 3rd | Testing | 5 | Largest effort — requires new dependencies, config files, and 4 new test files |
+
+> **Note:** Phases are ordered by implementation complexity (smallest first), not by compliance impact. Testing covers the most requirements (5) but was intentionally left last to build on a fully working and observable system.
+
+---
+
+## 11. Verification
 
 1. `npm run dev` — starts both Express API and React UI
 2. Open UI → type search query → see products from Swag Labs

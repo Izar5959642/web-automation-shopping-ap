@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { PurchaseService } from '../../services/PurchaseService';
+import { TraceCollector } from '../TraceCollector';
 
 /**
  * Creates a router for the POST /checkout endpoint.
@@ -16,22 +17,26 @@ export function createCheckoutRoute(purchaseService: PurchaseService): Router {
   const router = Router();
 
   router.post('/checkout', async (req, res) => {
+    const collector = new TraceCollector();
     try {
       const requestId = (req as any).requestId;
       const { firstName, lastName, postalCode } = req.body;
       const shippingDetails = { firstName, lastName, postalCode };
 
-      const result = await purchaseService.checkout(shippingDetails);
+      let result: Awaited<ReturnType<typeof purchaseService.checkout>>;
+      await collector.record(requestId, 'CHECKOUT', async () => {
+        result = await purchaseService.checkout(shippingDetails);
+      });
 
       res.json({
         requestId,
-        success: result.success,
-        screenshotPath: result.screenshotPath,
-        trace: [],
+        success: result!.success,
+        screenshotPath: result!.screenshotPath,
+        trace: collector.getSteps(),
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      res.status(500).json({ error: message });
+      res.status(500).json({ error: message, trace: collector.getSteps() });
     }
   });
 

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
+import { TraceStepList } from '../components/TraceStepList';
 
 /**
  * Cart status screen that shows the result after adding a product to cart.
@@ -12,7 +14,9 @@ export function CartStatusScreen(): React.ReactElement {
   const [postalCode, setPostalCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [failedTrace, setFailedTrace] = useState<any[]>([]);
   const navigate = useNavigate();
+  const { traceSteps, addTraceSteps } = useCart();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,11 +33,14 @@ export function CartStatusScreen(): React.ReactElement {
       const data = await response.json();
 
       if (!response.ok) {
+        setFailedTrace(data.trace ?? []);
         throw new Error(data.error || 'Checkout failed');
       }
 
+      const allSteps = [...traceSteps, ...(data.trace ?? [])];
+      addTraceSteps(data.trace ?? []);
       navigate('/checkout-result', {
-        state: { success: data.success, screenshotPath: data.screenshotPath },
+        state: { success: data.success, screenshotPath: data.screenshotPath, trace: allSteps },
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -124,6 +131,7 @@ export function CartStatusScreen(): React.ReactElement {
           {error}
         </div>
       )}
+      <TraceStepList steps={failedTrace} />
     </div>
   );
 }

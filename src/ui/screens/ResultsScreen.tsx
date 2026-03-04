@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { TraceStepList } from '../components/TraceStepList';
 
 /**
  * Results screen that displays the list of products returned from the search.
@@ -11,12 +12,14 @@ import { useCart } from '../context/CartContext';
 export function ResultsScreen(): React.ReactElement {
   const location = useLocation();
   const navigate = useNavigate();
-  const { addItem, items: cartItems } = useCart();
+  const { addItem, items: cartItems, addTraceSteps } = useCart();
   const [error, setError] = useState('');
+  const [failedTrace, setFailedTrace] = useState<any[]>([]);
   const [buyingId, setBuyingId] = useState<string | null>(null);
   const [recentlyAddedIds, setRecentlyAddedIds] = useState<string[]>([]);
 
   const products = (location.state as any)?.products ?? [];
+  const selectedProduct = (location.state as any)?.selectedProduct ?? null;
 
   const handleAddToCart = async (product: any) => {
     setError('');
@@ -32,9 +35,11 @@ export function ResultsScreen(): React.ReactElement {
       const data = await response.json();
 
       if (!response.ok) {
+        setFailedTrace(data.trace ?? []);
         throw new Error(data.error || 'Failed to add to cart');
       }
 
+      addTraceSteps(data.trace ?? []);
       addItem(product);
       setRecentlyAddedIds((prev) => [...prev, product.id]);
       setTimeout(() => {
@@ -72,24 +77,43 @@ export function ResultsScreen(): React.ReactElement {
           {error}
         </div>
       )}
+      <TraceStepList steps={failedTrace} />
 
       {products.length === 0 ? (
         <p style={{ fontSize: 18, color: '#666' }}>No products found</p>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 20 }}>
-          {products.map((product: any) => (
+          {products.map((product: any) => {
+            const isBestValue = selectedProduct?.id === product.id;
+            return (
             <div
               key={product.id}
               style={{
-                border: '1px solid #ddd',
+                border: isBestValue ? '2px solid #388e3c' : '1px solid #ddd',
                 borderRadius: 8,
                 padding: 16,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 gap: 12,
+                position: 'relative',
               }}
             >
+              {isBestValue && (
+                <span style={{
+                  position: 'absolute',
+                  top: 10,
+                  left: 10,
+                  backgroundColor: '#388e3c',
+                  color: 'white',
+                  fontSize: 11,
+                  fontWeight: 'bold',
+                  padding: '2px 8px',
+                  borderRadius: 4,
+                }}>
+                  ★ Best Value
+                </span>
+              )}
               <img
                 src={`https://www.saucedemo.com${product.imageUrl}`}
                 alt={product.title}
@@ -139,7 +163,8 @@ export function ResultsScreen(): React.ReactElement {
                 );
               })()}
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

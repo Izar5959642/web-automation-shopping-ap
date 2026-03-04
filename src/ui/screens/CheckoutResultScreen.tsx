@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { TraceStepList } from '../components/TraceStepList';
 
 /**
  * Checkout result screen that displays the final outcome of the checkout flow.
@@ -16,6 +17,7 @@ export function CheckoutResultScreen(): React.ReactElement {
   const state = location.state as any;
   const success = state?.success ?? false;
   const screenshotPath = state?.screenshotPath ?? '';
+  const trace: any[] = state?.trace ?? [];
 
   useEffect(() => {
     if (success) {
@@ -44,6 +46,8 @@ export function CheckoutResultScreen(): React.ReactElement {
           <h1 style={{ margin: 0, color: '#c62828' }}>Checkout failed. Please try again.</h1>
         </div>
       )}
+
+      <TraceStepList steps={trace} />
 
       <button
         onClick={() => navigate('/')}

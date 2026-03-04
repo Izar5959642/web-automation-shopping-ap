@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { PurchaseService } from '../../services/PurchaseService';
+import { TraceCollector } from '../TraceCollector';
 
 /**
  * Creates a router for the POST /buy endpoint.
@@ -16,16 +17,20 @@ export function createBuyRoute(purchaseService: PurchaseService): Router {
   const router = Router();
 
   router.post('/buy', async (req, res) => {
+    const collector = new TraceCollector();
     try {
       const requestId = (req as any).requestId;
       const { product } = req.body;
 
-      const result = await purchaseService.buy(product);
+      let result: Awaited<ReturnType<typeof purchaseService.buy>>;
+      await collector.record(requestId, 'ADD_TO_CART', async () => {
+        result = await purchaseService.buy(product);
+      });
 
-      res.json({ requestId, cart: result, trace: [] });
+      res.json({ requestId, cart: result!, trace: collector.getSteps() });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      res.status(500).json({ error: message });
+      res.status(500).json({ error: message, trace: collector.getSteps() });
     }
   });
 
