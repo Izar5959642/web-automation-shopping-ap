@@ -115,8 +115,9 @@ Adding support for a new website means adding a new class that extends `BaseScra
 
 ---
 
-## Known limitations
+## Implementation status
 
-- **SelectionPolicy not yet active** — `SelectionPolicy.ts` (select cheapest product) is implemented but not yet wired into the search or buy flow; all matching products are currently returned to the UI
-- **Trace steps not populated** — all API responses return `trace: []`; step-by-step observability is planned but not yet implemented
-- **Screenshot path** — `SwaglabsScraper.checkout()` currently returns an empty `screenshotPath`; the screenshot is taken separately via `takeScreenshot()`
+All planned features are implemented and working end-to-end:
+- SelectionPolicy (cheapest product) is active and highlighted in the UI
+- Full trace observability across all 3 automation steps
+- Checkout screenshot captured and displayed on the confirmation screen

@@ -20,6 +20,10 @@ export function SearchScreen(): React.ReactElement {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    if (!query.trim()) {
+      setError('Please enter a search term');
+      return;
+    }
     setLoading(true);
 
     try {

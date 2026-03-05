@@ -17,6 +17,16 @@ Business logic orchestration. Connects the domain and automation layers. Applies
 - **`PurchaseService`** — orchestrates buy and checkout: applies selection policy, calls scraper.addToCart() and scraper.checkout()
 - **`SelectionPolicy`** — pure function that selects the cheapest product from a Product[] list
 
+## Tests
+
+Unit tests live in `__tests__/`:
+
+- **`SearchService.test.ts`** — 8 tests: price normalization, maxPrice filtering, query filtering
+- **`SelectionPolicy.test.ts`** — 6 tests: cheapest selection, tie-breaking, empty array error, no mutation
+- **`PurchaseService.test.ts`** — 4 tests: cart accumulation, totalPrice, scraper failure handling
+
+Run with: `npm test`
+
 ## Input
 
 - Search query and optional maxPrice filter
