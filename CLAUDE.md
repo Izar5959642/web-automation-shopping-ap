@@ -37,6 +37,14 @@ Web automation shopping app. Target site: Swag Labs (saucedemo.com). Stack: Reac
 - Never write full implementation on first pass unless explicitly instructed
 - Ask for confirmation before implementing complex logic
 
+
+
+  ## 7. Communication Rules
+  - Always respond in simple, clear English
+  - Avoid complex vocabulary
+  - Keep explanations short and direct
+
+  
 ## Golden Rule
 
 - Never create files, folders, or run commands unless explicitly instructed in the current prompt.

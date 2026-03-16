@@ -27,7 +27,7 @@ export function Header({ cartItemCount }: HeaderProps): React.ReactElement {
       }}
     >
       <span style={{ fontSize: 22, fontWeight: 'bold', letterSpacing: 1 }}>
-        Swag Labs
+        e-commerce automation !!
       </span>
 
       <button

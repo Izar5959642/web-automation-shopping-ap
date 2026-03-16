@@ -108,7 +108,7 @@ src/
 | `automation/` | All browser interaction via Playwright; selectors centralised in `selectors/swaglabs.ts` |
 | `domain/` | Shared data models with zero external imports |
 | `services/` | Orchestrates flows; calls automation through the `BaseScraper` interface |
-| `api/` | Express routes; generates a `requestId` (UUID v4) for every request |
+| `api/` | Express routes; generates a `requestId` (UUID v4) for every request; `TraceCollector` records automation steps per request |
 | `ui/` | React SPA; cart state managed via `CartContext` with `localStorage` persistence |
 
 Adding support for a new website means adding a new class that extends `BaseScraper` — no changes required to `services/`, `api/`, or `ui/`.
