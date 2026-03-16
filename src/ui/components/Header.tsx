@@ -1,80 +1,112 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { ShoppingBag } from 'lucide-react';
 
 interface HeaderProps {
   cartItemCount: number;
 }
 
 /**
- * Global app header with the Swag Labs logo and a cart icon badge.
- * Clicking the cart icon navigates to /cart.
+ * Global app header — Aesop-inspired.
+ * Announcement bar on top, centered wordmark, cart icon on right.
  */
 export function Header({ cartItemCount }: HeaderProps): React.ReactElement {
   const navigate = useNavigate();
 
   return (
-    <header
-      style={{
-        backgroundColor: '#132d4e',
-        color: 'white',
-        padding: '0 24px',
-        height: 64,
+    <div style={{ position: 'sticky', top: 0, zIndex: 100 }}>
+      {/* Announcement bar */}
+      <div style={{
+        backgroundColor: 'var(--color-announcement)',
+        color: '#f7f4ef',
+        textAlign: 'center',
+        fontSize: 11,
+        letterSpacing: '0.12em',
+        textTransform: 'uppercase',
+        padding: '8px 24px',
+        fontFamily: 'var(--font-sans)',
+      }}>
+        Free standard delivery on orders over $50
+      </div>
+
+      {/* Main header */}
+      <header style={{
+        backgroundColor: 'var(--color-bg)',
+        borderBottom: '1px solid var(--color-border)',
+        padding: '0 40px',
+        height: 72,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        fontFamily: 'sans-serif',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
-      }}
-    >
-      <span style={{ fontSize: 22, fontWeight: 'bold', letterSpacing: 1 }}>
-        e-commerce automation !!
-      </span>
+      }}>
+        {/* Left spacer */}
+        <div style={{ width: 120 }} />
 
-      <button
-        onClick={() => navigate('/cart')}
-        aria-label="View cart"
-        style={{
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer',
-          position: 'relative',
-          padding: 8,
-          display: 'flex',
-          alignItems: 'center',
-        }}
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          width={28}
-          height={28}
-          fill="white"
+        {/* Centered wordmark */}
+        <span
+          onClick={() => navigate('/')}
+          style={{
+            fontFamily: 'var(--font-serif)',
+            fontSize: 22,
+            fontWeight: 300,
+            letterSpacing: '0.18em',
+            textTransform: 'uppercase',
+            cursor: 'pointer',
+            color: 'var(--color-text)',
+            userSelect: 'none',
+          }}
         >
-          <path d="M7 18c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM5.16 5H2V3H0v2h2l3.6 7.59L4.25 15c-.16.28-.25.61-.25.95C4 17.1 4.9 18 6 18h15v-2H6.42c-.14 0-.25-.11-.25-.25l.03-.12L7.1 14h9.45c.75 0 1.41-.41 1.75-1.03L21.7 6H5.16z" />
-        </svg>
+          Swag Labs
+        </span>
 
-        {cartItemCount > 0 && (
-          <span
+        {/* Right: cart */}
+        <div style={{ width: 120, display: 'flex', justifyContent: 'flex-end' }}>
+          <button
+            onClick={() => navigate('/cart')}
+            aria-label="View cart"
             style={{
-              position: 'absolute',
-              top: 2,
-              right: 2,
-              backgroundColor: '#e63329',
-              color: 'white',
-              borderRadius: '50%',
-              width: 18,
-              height: 18,
-              fontSize: 11,
-              fontWeight: 'bold',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              position: 'relative',
+              padding: 8,
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
+              color: 'var(--color-text)',
             }}
           >
-            {cartItemCount}
-          </span>
-        )}
-      </button>
-    </header>
+            <ShoppingBag size={22} strokeWidth={1.5} />
+
+            {cartItemCount > 0 && (
+              <motion.span
+                key={cartItemCount}
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                style={{
+                  position: 'absolute',
+                  top: 2,
+                  right: 2,
+                  backgroundColor: 'var(--color-text)',
+                  color: 'var(--color-bg)',
+                  borderRadius: '50%',
+                  width: 16,
+                  height: 16,
+                  fontSize: 10,
+                  fontWeight: 500,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontFamily: 'var(--font-sans)',
+                }}
+              >
+                {cartItemCount}
+              </motion.span>
+            )}
+          </button>
+        </div>
+      </header>
+    </div>
   );
 }

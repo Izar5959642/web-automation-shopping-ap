@@ -22,7 +22,7 @@ test('full checkout flow: search → add to cart → checkout → success', asyn
 
   // Step 4: Add first product to cart
   await firstAddToCart.click();
-  await expect(page.locator('button:has-text("✓ Added")').first()).toBeVisible({ timeout: 10000 });
+  await expect(page.locator('button:has-text("Added")').first()).toBeVisible({ timeout: 10000 });
 
   // Step 5: Navigate to cart status (shipping form)
   await page.goto('/cart-status');
@@ -34,10 +34,10 @@ test('full checkout flow: search → add to cart → checkout → success', asyn
   await page.fill('#postalCode', '12345');
 
   // Step 7: Complete checkout
-  await page.click('button:has-text("Complete Checkout")');
+  await page.click('button:has-text("Confirm Order")');
 
   // Step 8: Assert success screen
-  await expect(page.locator('text=Order completed successfully!')).toBeVisible({ timeout: 30000 });
+  await expect(page.locator('text=Order Confirmed')).toBeVisible({ timeout: 30000 });
 
   // Step 9: Assert trace steps are visible
   await expect(page.locator('text=Automation Steps')).toBeVisible();

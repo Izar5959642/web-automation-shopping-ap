@@ -1,24 +1,59 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { ArrowLeft, Star, ShoppingBag, Check } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { TraceStepList } from '../components/TraceStepList';
 
+const pageVariants = {
+  initial: { opacity: 0, y: 16 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+  exit:    { opacity: 0, y: -8,  transition: { duration: 0.3 } },
+};
+
+const gridVariants = {
+  animate: { transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
+};
+
+const cardVariants = {
+  initial: { opacity: 0, y: 24 },
+  animate: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] as [number,number,number,number] },
+  },
+};
+
+function SkeletonCard(): React.ReactElement {
+  return (
+    <div style={{
+      backgroundColor: 'var(--color-surface)',
+      padding: 24,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 12,
+    }}>
+      <div className="skeleton" style={{ width: '100%', height: 180 }} />
+      <div className="skeleton" style={{ width: '70%', height: 16 }} />
+      <div className="skeleton" style={{ width: '30%', height: 22 }} />
+      <div className="skeleton" style={{ width: '100%', height: 40 }} />
+    </div>
+  );
+}
+
 /**
- * Results screen that displays the list of products returned from the search.
- * Shows product cards with title, price, and image.
- * Allows user to click "Add to Cart" on a product, which triggers POST /api/buy
- * and adds the item to cart context. Does not navigate away.
+ * Results screen — stagger-reveal product cards with hover lift and skeleton placeholders.
  */
 export function ResultsScreen(): React.ReactElement {
   const location = useLocation();
   const navigate = useNavigate();
   const { addItem, items: cartItems, addTraceSteps } = useCart();
-  const [error, setError] = useState('');
+  const [error, setError]           = useState('');
   const [failedTrace, setFailedTrace] = useState<any[]>([]);
-  const [buyingId, setBuyingId] = useState<string | null>(null);
+  const [buyingId, setBuyingId]     = useState<string | null>(null);
   const [recentlyAddedIds, setRecentlyAddedIds] = useState<string[]>([]);
 
-  const products = (location.state as any)?.products ?? [];
+  const products        = (location.state as any)?.products ?? [];
   const selectedProduct = (location.state as any)?.selectedProduct ?? null;
 
   const handleAddToCart = async (product: any) => {
@@ -54,119 +89,228 @@ export function ResultsScreen(): React.ReactElement {
   };
 
   return (
-    <div style={{ maxWidth: 900, margin: '40px auto', padding: 24, fontFamily: 'sans-serif' }}>
+    <motion.div
+      variants={pageVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      style={{ maxWidth: 'var(--max-width)', margin: '48px auto', padding: '0 40px' }}
+    >
+      {/* Back button */}
       <button
         onClick={() => navigate('/')}
         style={{
-          padding: '8px 16px',
-          fontSize: 14,
-          backgroundColor: '#eee',
-          border: '1px solid #ccc',
-          borderRadius: 4,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+          background: 'none',
+          border: 'none',
           cursor: 'pointer',
-          marginBottom: 24,
+          color: 'var(--color-text-muted)',
+          fontSize: 11,
+          letterSpacing: '0.12em',
+          textTransform: 'uppercase',
+          padding: 0,
+          marginBottom: 40,
+          fontFamily: 'var(--font-sans)',
         }}
       >
+        <ArrowLeft size={14} strokeWidth={1.5} />
         Back to Search
       </button>
 
-      <h1 style={{ marginBottom: 24 }}>Search Results</h1>
+      {/* Heading */}
+      <div style={{ marginBottom: 40 }}>
+        <p style={{
+          fontFamily: 'var(--font-sans)',
+          fontSize: 11,
+          letterSpacing: '0.2em',
+          textTransform: 'uppercase',
+          color: 'var(--color-text-muted)',
+          marginBottom: 10,
+        }}>
+          Results
+        </p>
+        <h1 style={{
+          fontFamily: 'var(--font-serif)',
+          fontSize: 'clamp(28px, 4vw, 44px)',
+          fontWeight: 300,
+          color: 'var(--color-text)',
+        }}>
+          Search Results
+        </h1>
+      </div>
 
       {error && (
-        <div style={{ marginBottom: 16, padding: 12, backgroundColor: '#ffebee', color: '#c62828', borderRadius: 4 }}>
+        <div style={{
+          marginBottom: 24,
+          padding: '12px 16px',
+          border: '1px solid var(--color-error)',
+          color: 'var(--color-error)',
+          fontSize: 13,
+          fontFamily: 'var(--font-sans)',
+        }}>
           {error}
         </div>
       )}
       <TraceStepList steps={failedTrace} />
 
       {products.length === 0 ? (
-        <p style={{ fontSize: 18, color: '#666' }}>No products found</p>
+        /* Skeleton grid */
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+          gap: 16,
+          backgroundColor: 'transparent',
+        }}>
+          {Array.from({ length: 6 }).map((_, i) => (
+            <SkeletonCard key={i} />
+          ))}
+        </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 20 }}>
+        <motion.div
+          variants={gridVariants}
+          initial="initial"
+          animate="animate"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+            gap: 16,
+            backgroundColor: 'transparent',
+          }}
+        >
           {products.map((product: any) => {
-            const isBestValue = selectedProduct?.id === product.id;
+            const isBestValue  = selectedProduct?.id === product.id;
+            const isAdding     = buyingId === product.id;
+            const justAdded    = recentlyAddedIds.includes(product.id);
+            const alreadyInCart = cartItems.some((i) => i.id === product.id);
+
             return (
-            <div
-              key={product.id}
-              style={{
-                border: isBestValue ? '2px solid #388e3c' : '1px solid #ddd',
-                borderRadius: 8,
-                padding: 16,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 12,
-                position: 'relative',
-              }}
-            >
-              {isBestValue && (
-                <span style={{
-                  position: 'absolute',
-                  top: 10,
-                  left: 10,
-                  backgroundColor: '#388e3c',
-                  color: 'white',
-                  fontSize: 11,
-                  fontWeight: 'bold',
-                  padding: '2px 8px',
+              <motion.div
+                key={product.id}
+                variants={cardVariants}
+                whileHover={{
+                  y: -4,
+                  boxShadow: 'var(--shadow-card-hover)',
+                  transition: { duration: 0.2 },
+                }}
+                style={{
+                  backgroundColor: 'var(--color-surface)',
+                  padding: 24,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 12,
+                  position: 'relative',
+                  boxShadow: 'var(--shadow-card)',
                   borderRadius: 4,
+                }}
+              >
+                {/* Best Value badge */}
+                {isBestValue && (
+                  <span style={{
+                    position: 'absolute',
+                    top: 12,
+                    left: 12,
+                    backgroundColor: 'var(--color-badge)',
+                    color: '#f7f4ef',
+                    fontSize: 9,
+                    letterSpacing: '0.14em',
+                    textTransform: 'uppercase',
+                    padding: '3px 8px',
+                    fontFamily: 'var(--font-sans)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 4,
+                  }}>
+                    <Star size={9} fill="#f7f4ef" strokeWidth={0} />
+                    Best Value
+                  </span>
+                )}
+
+                <img
+                  src={`https://www.saucedemo.com${product.imageUrl}`}
+                  alt={product.title}
+                  style={{ width: '100%', maxWidth: 180, height: 180, objectFit: 'contain' }}
+                />
+
+                <h3 style={{
+                  margin: 0,
+                  textAlign: 'center',
+                  fontFamily: 'var(--font-serif)',
+                  fontSize: 18,
+                  fontWeight: 300,
+                  color: 'var(--color-text)',
                 }}>
-                  ★ Best Value
-                </span>
-              )}
-              <img
-                src={`https://www.saucedemo.com${product.imageUrl}`}
-                alt={product.title}
-                style={{ width: '100%', maxWidth: 180, height: 180, objectFit: 'contain' }}
-              />
-              <h3 style={{ margin: 0, textAlign: 'center', fontSize: 16 }}>{product.title}</h3>
-              <p style={{ margin: 0, fontSize: 20, fontWeight: 'bold', color: '#2e7d32' }}>
-                ${product.price.toFixed(2)}
-              </p>
-              {(() => {
-                const isAdding = buyingId === product.id;
-                const justAdded = recentlyAddedIds.includes(product.id);
-                const alreadyInCart = cartItems.some((i) => i.id === product.id);
+                  {product.title}
+                </h3>
 
-                const label = isAdding
-                  ? 'Adding...'
-                  : justAdded
-                  ? '✓ Added'
-                  : alreadyInCart
-                  ? 'Already in Cart'
-                  : 'Add to Cart';
+                <p style={{
+                  margin: 0,
+                  fontFamily: 'var(--font-serif)',
+                  fontSize: 22,
+                  fontWeight: 300,
+                  color: 'var(--color-text)',
+                  letterSpacing: '0.04em',
+                }}>
+                  ${product.price.toFixed(2)}
+                </p>
 
-                const bg = isAdding || (!justAdded && !alreadyInCart)
-                  ? '#1976d2'
-                  : justAdded
-                  ? '#388e3c'
-                  : '#ff9800';
-
-                return (
-                  <button
-                    onClick={() => handleAddToCart(product)}
-                    disabled={isAdding || justAdded}
-                    style={{
-                      padding: '10px 24px',
-                      fontSize: 14,
-                      fontWeight: 'bold',
-                      backgroundColor: bg,
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: 4,
-                      cursor: (isAdding || justAdded) ? 'not-allowed' : 'pointer',
-                      width: '100%',
-                    }}
-                  >
-                    {label}
-                  </button>
-                );
-              })()}
-            </div>
+                {/* Add to Cart button */}
+                <button
+                  onClick={() => handleAddToCart(product)}
+                  disabled={isAdding || justAdded}
+                  style={{
+                    width: '100%',
+                    padding: '11px',
+                    fontSize: 10,
+                    letterSpacing: '0.16em',
+                    textTransform: 'uppercase',
+                    fontWeight: 500,
+                    fontFamily: 'var(--font-sans)',
+                    border: alreadyInCart && !justAdded ? '1px solid var(--color-border)' : 'none',
+                    backgroundColor: justAdded
+                      ? 'var(--color-success)'
+                      : alreadyInCart
+                      ? 'transparent'
+                      : 'var(--color-accent)',
+                    color: alreadyInCart && !justAdded
+                      ? 'var(--color-text-muted)'
+                      : 'var(--color-bg)',
+                    cursor: (isAdding || justAdded) ? 'default' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 6,
+                    transition: 'background-color 0.2s ease',
+                  }}
+                >
+                  {isAdding ? (
+                    <motion.span
+                      animate={{ rotate: 360 }}
+                      transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+                      style={{
+                        width: 12,
+                        height: 12,
+                        border: '1.5px solid #f7f4ef',
+                        borderTopColor: 'transparent',
+                        borderRadius: '50%',
+                        display: 'inline-block',
+                      }}
+                    />
+                  ) : justAdded ? (
+                    <><Check size={12} strokeWidth={2} /> Added</>
+                  ) : alreadyInCart ? (
+                    <><ShoppingBag size={12} strokeWidth={1.5} /> In Cart</>
+                  ) : (
+                    <><ShoppingBag size={12} strokeWidth={1.5} /> Add to Cart</>
+                  )}
+                </button>
+              </motion.div>
             );
           })}
-        </div>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   );
 }

@@ -1,106 +1,222 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, Trash2, ShoppingBag } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { Product } from '../../domain/Product';
 
+const pageVariants = {
+  initial: { opacity: 0, y: 16 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+  exit:    { opacity: 0, y: -8,  transition: { duration: 0.3 } },
+};
+
 /**
- * CartScreen displays the current contents of the shopping cart.
- *
- * Reads cart data from CartContext (persisted in localStorage),
- * so it works correctly regardless of how the user navigated here.
- *
- * Displays:
- * - A list of cart items (Product[]) with title, price, and image
- * - Quantity per item (assumed to be 1 for now)
- * - A "Remove" button per item
- * - Total price calculated from all items
- * - A "Proceed to Checkout" button that navigates to /cart-status
- * - A "Back to Search" button that navigates to /
+ * CartScreen — animated item list with smooth remove transitions.
  */
 export function CartScreen(): React.ReactElement {
   const navigate = useNavigate();
   const { items, totalPrice, removeItem } = useCart();
 
   return (
-    <div style={{ maxWidth: 900, margin: '40px auto', padding: 24, fontFamily: 'sans-serif' }}>
+    <motion.div
+      variants={pageVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      style={{ maxWidth: 'var(--max-width)', margin: '48px auto', padding: '0 40px' }}
+    >
+      {/* Back button */}
       <button
         onClick={() => navigate('/')}
         style={{
-          padding: '8px 16px',
-          fontSize: 14,
-          backgroundColor: '#eee',
-          border: '1px solid #ccc',
-          borderRadius: 4,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+          background: 'none',
+          border: 'none',
           cursor: 'pointer',
-          marginBottom: 24,
+          color: 'var(--color-text-muted)',
+          fontSize: 11,
+          letterSpacing: '0.12em',
+          textTransform: 'uppercase',
+          padding: 0,
+          marginBottom: 40,
+          fontFamily: 'var(--font-sans)',
         }}
       >
+        <ArrowLeft size={14} strokeWidth={1.5} />
         Back to Search
       </button>
 
-      <h1 style={{ marginBottom: 24 }}>Your Cart</h1>
+      {/* Heading */}
+      <div style={{ marginBottom: 40 }}>
+        <p style={{
+          fontFamily: 'var(--font-sans)',
+          fontSize: 11,
+          letterSpacing: '0.2em',
+          textTransform: 'uppercase',
+          color: 'var(--color-text-muted)',
+          marginBottom: 10,
+        }}>
+          Your Selection
+        </p>
+        <h1 style={{
+          fontFamily: 'var(--font-serif)',
+          fontSize: 'clamp(28px, 4vw, 44px)',
+          fontWeight: 300,
+          color: 'var(--color-text)',
+        }}>
+          Your Cart
+        </h1>
+      </div>
 
       {items.length === 0 ? (
-        <p style={{ fontSize: 18, color: '#666' }}>Your cart is empty</p>
+        <div style={{
+          textAlign: 'center',
+          padding: '80px 0',
+          color: 'var(--color-text-muted)',
+          fontFamily: 'var(--font-sans)',
+        }}>
+          <ShoppingBag size={40} strokeWidth={1} style={{ marginBottom: 16, opacity: 0.4 }} />
+          <p style={{ fontSize: 13, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+            Your cart is empty
+          </p>
+        </div>
       ) : (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 20, marginBottom: 32 }}>
-            {items.map((item: Product) => (
-              <div
-                key={item.id}
-                style={{
-                  border: '1px solid #ddd',
-                  borderRadius: 8,
-                  padding: 16,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: 12,
-                }}
-              >
-                <img
-                  src={`https://www.saucedemo.com${item.imageUrl}`}
-                  alt={item.title}
-                  style={{ width: '100%', maxWidth: 180, height: 180, objectFit: 'contain' }}
-                />
-                <h3 style={{ margin: 0, textAlign: 'center', fontSize: 16 }}>{item.title}</h3>
-                <p style={{ margin: 0, fontSize: 20, fontWeight: 'bold', color: '#2e7d32' }}>
-                  ${item.price.toFixed(2)}
-                </p>
-                <p style={{ margin: 0, fontSize: 14, color: '#555' }}>Quantity: 1</p>
-                <button
-                  onClick={() => removeItem(item.id)}
+          {/* Cart items grid with animated exits */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
+            gap: 16,
+            backgroundColor: 'transparent',
+            marginBottom: 48,
+          }}>
+            <AnimatePresence>
+              {items.map((item: Product) => (
+                <motion.div
+                  key={item.id}
+                  layout
+                  initial={{ opacity: 0, x: -16 }}
+                  animate={{ opacity: 1, x: 0, transition: { duration: 0.3 } }}
+                  exit={{ opacity: 0, x: 32, transition: { duration: 0.25 } }}
                   style={{
-                    padding: '8px 16px',
-                    fontSize: 14,
-                    backgroundColor: '#ffebee',
-                    color: '#c62828',
-                    border: '1px solid #ef9a9a',
+                    backgroundColor: 'var(--color-surface)',
+                    padding: 24,
+                    boxShadow: 'var(--shadow-card)',
                     borderRadius: 4,
-                    cursor: 'pointer',
-                    width: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 12,
                   }}
                 >
-                  Remove
-                </button>
-              </div>
-            ))}
+                  <img
+                    src={`https://www.saucedemo.com${item.imageUrl}`}
+                    alt={item.title}
+                    style={{ width: '100%', maxWidth: 160, height: 160, objectFit: 'contain' }}
+                  />
+                  <h3 style={{
+                    margin: 0,
+                    textAlign: 'center',
+                    fontFamily: 'var(--font-serif)',
+                    fontSize: 17,
+                    fontWeight: 300,
+                    color: 'var(--color-text)',
+                  }}>
+                    {item.title}
+                  </h3>
+                  <p style={{
+                    margin: 0,
+                    fontFamily: 'var(--font-serif)',
+                    fontSize: 20,
+                    fontWeight: 300,
+                    color: 'var(--color-text)',
+                  }}>
+                    ${item.price.toFixed(2)}
+                  </p>
+                  <p style={{
+                    margin: 0,
+                    fontSize: 11,
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                    color: 'var(--color-text-muted)',
+                    fontFamily: 'var(--font-sans)',
+                  }}>
+                    Qty: 1
+                  </p>
+
+                  {/* Remove button */}
+                  <button
+                    onClick={() => removeItem(item.id)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 5,
+                      padding: '8px 0',
+                      background: 'none',
+                      border: 'none',
+                      borderTop: '1px solid var(--color-border)',
+                      width: '100%',
+                      cursor: 'pointer',
+                      color: 'var(--color-text-muted)',
+                      fontSize: 10,
+                      letterSpacing: '0.14em',
+                      textTransform: 'uppercase',
+                      fontFamily: 'var(--font-sans)',
+                    }}
+                  >
+                    <Trash2 size={12} strokeWidth={1.5} />
+                    Remove
+                  </button>
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
 
-          <div style={{ borderTop: '2px solid #ddd', paddingTop: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <p style={{ fontSize: 22, fontWeight: 'bold', margin: 0 }}>
-              Total: ${totalPrice.toFixed(2)}
-            </p>
+          {/* Total + checkout */}
+          <div style={{
+            borderTop: '1px solid var(--color-border)',
+            paddingTop: 32,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}>
+            <div>
+              <p style={{
+                fontSize: 11,
+                letterSpacing: '0.14em',
+                textTransform: 'uppercase',
+                color: 'var(--color-text-muted)',
+                marginBottom: 6,
+                fontFamily: 'var(--font-sans)',
+              }}>
+                Order Total
+              </p>
+              <p style={{
+                fontFamily: 'var(--font-serif)',
+                fontSize: 32,
+                fontWeight: 300,
+                color: 'var(--color-text)',
+              }}>
+                ${totalPrice.toFixed(2)}
+              </p>
+            </div>
+
             <button
               onClick={() => navigate('/cart-status')}
               style={{
-                padding: '12px 32px',
-                fontSize: 16,
-                fontWeight: 'bold',
-                backgroundColor: '#1976d2',
-                color: 'white',
+                padding: '14px 40px',
+                fontSize: 10,
+                letterSpacing: '0.18em',
+                textTransform: 'uppercase',
+                fontWeight: 500,
+                fontFamily: 'var(--font-sans)',
+                backgroundColor: 'var(--color-accent)',
+                color: 'var(--color-bg)',
                 border: 'none',
-                borderRadius: 4,
                 cursor: 'pointer',
               }}
             >
@@ -109,6 +225,6 @@ export function CartScreen(): React.ReactElement {
           </div>
         </>
       )}
-    </div>
+    </motion.div>
   );
 }
