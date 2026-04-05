@@ -102,7 +102,7 @@ src/
 ├── api/          # Express REST API — routes, requestId middleware, server bootstrap
 └── ui/           # React SPA — screens, CartContext (global state), Header component
 ```
-
+ The domain layer is the most isolated — it has zero imports from any other layer. It's the foundation.
 | Layer | Responsibility |
 |-------|---------------|
 | `automation/` | All browser interaction via Playwright; selectors centralised in `selectors/swaglabs.ts` |
