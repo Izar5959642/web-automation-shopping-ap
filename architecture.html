@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Architecture — 5 Layer Diagram</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 1.8rem;
+      margin-bottom: 8px;
+      color: #f8fafc;
+      letter-spacing: 1px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #94a3b8;
+      margin-bottom: 48px;
+      font-size: 0.95rem;
+    }
+
+    /* ── Section titles ── */
+    .section-title {
+      text-align: center;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #475569;
+      margin-bottom: 20px;
+    }
+
+    .section-title span {
+      border: 1px solid #334155;
+      padding: 4px 16px;
+      border-radius: 20px;
+    }
+
+    /* ── Diagram 1: Main chain ── */
+    .diagram-chain {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      max-width: 860px;
+      margin: 0 auto 60px;
+    }
+
+    /* ── Diagram 2: Side-by-side ── */
+    .diagram-side {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 0;
+      max-width: 960px;
+      margin: 0 auto 60px;
+    }
+
+    .side-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+    }
+
+    .side-col-automation {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 340px;
+      flex-shrink: 0;
+    }
+
+    /* connector between the two columns */
+    .side-connector {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 0 12px;
+      /* push it down so it aligns with services row */
+      margin-top: 340px;
+    }
+
+    .connector-line-h {
+      height: 2px;
+      width: 40px;
+      background: #a78bfa;
+    }
+
+    .connector-line-v {
+      width: 2px;
+      height: 40px;
+      background: #a78bfa;
+    }
+
+    .connector-label {
+      font-size: 0.62rem;
+      color: #a78bfa;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      white-space: nowrap;
+      margin: 4px 0;
+    }
+
+    /* ── Layers ── */
+    .layer {
+      width: 100%;
+      border-radius: 12px;
+      padding: 20px 28px;
+      border: 2px solid transparent;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .layer:hover {
+      transform: scale(1.01);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+
+    .layer-ui         { background: #1e1b4b; border-color: #6366f1; }
+    .layer-api        { background: #1e3a5f; border-color: #38bdf8; }
+    .layer-services   { background: #14532d; border-color: #4ade80; }
+    .layer-domain     { background: #451a03; border-color: #fb923c; }
+    .layer-automation { background: #1a1a2e; border-color: #a78bfa; }
+
+    .layer-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .layer-number {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.1);
+      color: #cbd5e1;
+      letter-spacing: 1px;
+    }
+
+    .layer-name {
+      font-size: 1.15rem;
+      font-weight: 700;
+    }
+
+    .layer-ui         .layer-name { color: #a5b4fc; }
+    .layer-api        .layer-name { color: #7dd3fc; }
+    .layer-services   .layer-name { color: #86efac; }
+    .layer-domain     .layer-name { color: #fdba74; }
+    .layer-automation .layer-name { color: #c4b5fd; }
+
+    .layer-badge {
+      margin-left: auto;
+      font-size: 0.7rem;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-top        { background: #312e81; color: #a5b4fc; }
+    .badge-foundation { background: #78350f; color: #fcd34d; }
+    .badge-outside    { background: #2e1065; color: #c4b5fd; }
+
+    .layer-body {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+    }
+
+    .layer-body-2col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .info-block {
+      background: rgba(0,0,0,0.25);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+
+    .info-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #64748b;
+      margin-bottom: 7px;
+    }
+
+    .info-content {
+      font-size: 0.8rem;
+      color: #cbd5e1;
+      line-height: 1.6;
+    }
+
+    .info-content li {
+      list-style: none;
+      margin-bottom: 3px;
+    }
+
+    .info-content li::before {
+      content: "→ ";
+      color: #475569;
+    }
+
+    .tag {
+      display: inline-block;
+      font-size: 0.7rem;
+      padding: 2px 7px;
+      border-radius: 4px;
+      margin: 2px 2px 2px 0;
+      font-family: monospace;
+    }
+
+    .tag-file   { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
+    .tag-import { background: #0f2027; color: #38bdf8; border: 1px solid #164e63; }
+    .tag-none   { background: #1a1a1a; color: #4b5563; border: 1px solid #374151; font-style: italic; }
+    .tag-auto   { background: #1a0a2e; color: #a78bfa; border: 1px solid #4c1d95; }
+
+    /* ── Arrows (vertical) ── */
+    .arrow-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 2px 0;
+    }
+
+    .arrow-line {
+      width: 2px;
+      height: 28px;
+      background: linear-gradient(to bottom, #334155, #1e293b);
+    }
+
+    .arrow-label {
+      font-size: 0.65rem;
+      color: #475569;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin: 4px 0;
+    }
+
+    .arrow-head {
+      width: 0;
+      height: 0;
+      border-left: 7px solid transparent;
+      border-right: 7px solid transparent;
+      border-top: 10px solid #334155;
+    }
+
+    /* ── Callout box for automation ── */
+    .automation-note {
+      width: 100%;
+      margin-top: 16px;
+      padding: 12px 16px;
+      background: rgba(167,139,250,0.08);
+      border: 1px dashed #4c1d95;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      color: #a78bfa;
+      line-height: 1.6;
+      text-align: center;
+    }
+
+    /* ── SVG connector area ── */
+    .svg-connector {
+      width: 100%;
+      max-width: 960px;
+      margin: 0 auto;
+      display: block;
+    }
+
+    /* ── Legend & rules ── */
+    .legend {
+      max-width: 960px;
+      margin: 40px auto 0;
+      padding: 20px 28px;
+      background: #1e293b;
+      border-radius: 12px;
+      border: 1px solid #334155;
+    }
+
+    .legend h3 {
+      font-size: 0.82rem;
+      color: #94a3b8;
+      margin-bottom: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .legend-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .legend-item {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .rule-block {
+      max-width: 960px;
+      margin: 20px auto 0;
+      padding: 18px 28px;
+      background: #1a0a00;
+      border-radius: 12px;
+      border: 1px solid #92400e;
+    }
+
+    .rule-block h3 {
+      font-size: 0.82rem;
+      color: #fb923c;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .rule-block ul {
+      list-style: none;
+      font-size: 0.82rem;
+      color: #d97706;
+      line-height: 1.8;
+    }
+
+    .rule-block ul li::before { content: "⚠ "; }
+
+    .divider {
+      max-width: 960px;
+      margin: 60px auto 40px;
+      border: none;
+      border-top: 1px solid #1e293b;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>5-Layer Architecture</h1>
+  <p class="subtitle">Web Automation Shopping App — saucedemo.com</p>
+
+  <!-- ═══════════════════════════════════════════
+       DIAGRAM 0 — The Request Flow
+  ════════════════════════════════════════════ -->
+  <div class="section-title"><span>Diagram 1 — The Request Flow (what happens when user searches)</span></div>
+
+  <div style="max-width:960px; margin: 0 auto 60px;">
+    <svg width="100%" viewBox="0 0 900 160" xmlns="http://www.w3.org/2000/svg" style="display:block;">
+      <defs>
+        <marker id="arr-flow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L8,3 z" fill="#475569"/>
+        </marker>
+        <marker id="arr-site" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L8,3 z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <!-- USER -->
+      <rect x="10" y="50" width="90" height="60" rx="8" fill="#1e293b" stroke="#475569" stroke-width="2"/>
+      <text x="55" y="78" font-family="Segoe UI,sans-serif" font-size="13" fill="#94a3b8" text-anchor="middle" font-weight="700">USER</text>
+      <text x="55" y="97" font-family="Segoe UI,sans-serif" font-size="10" fill="#64748b" text-anchor="middle">clicks search</text>
+
+      <!-- arrow user → ui -->
+      <line x1="100" y1="80" x2="138" y2="80" stroke="#475569" stroke-width="2" marker-end="url(#arr-flow)"/>
+
+      <!-- UI -->
+      <rect x="140" y="50" width="100" height="60" rx="8" fill="#1e1b4b" stroke="#6366f1" stroke-width="2"/>
+      <text x="190" y="75" font-family="Segoe UI,sans-serif" font-size="14" fill="#a5b4fc" text-anchor="middle" font-weight="700">ui</text>
+      <text x="190" y="93" font-family="Segoe UI,sans-serif" font-size="10" fill="#64748b" text-anchor="middle">HTTP request</text>
+
+      <!-- arrow ui → api -->
+      <line x1="240" y1="80" x2="278" y2="80" stroke="#475569" stroke-width="2" marker-end="url(#arr-flow)"/>
+
+      <!-- API -->
+      <rect x="280" y="50" width="100" height="60" rx="8" fill="#1e3a5f" stroke="#38bdf8" stroke-width="2"/>
+      <text x="330" y="75" font-family="Segoe UI,sans-serif" font-size="14" fill="#7dd3fc" text-anchor="middle" font-weight="700">api</text>
+      <text x="330" y="93" font-family="Segoe UI,sans-serif" font-size="10" fill="#64748b" text-anchor="middle">routes request</text>
+
+      <!-- arrow api → services -->
+      <line x1="380" y1="80" x2="418" y2="80" stroke="#475569" stroke-width="2" marker-end="url(#arr-flow)"/>
+
+      <!-- SERVICES -->
+      <rect x="420" y="50" width="100" height="60" rx="8" fill="#14532d" stroke="#4ade80" stroke-width="2"/>
+      <text x="470" y="75" font-family="Segoe UI,sans-serif" font-size="14" fill="#86efac" text-anchor="middle" font-weight="700">services</text>
+      <text x="470" y="93" font-family="Segoe UI,sans-serif" font-size="10" fill="#64748b" text-anchor="middle">runs logic</text>
+
+      <!-- arrow services → automation -->
+      <line x1="520" y1="80" x2="558" y2="80" stroke="#475569" stroke-width="2" marker-end="url(#arr-flow)"/>
+
+      <!-- AUTOMATION -->
+      <rect x="560" y="50" width="110" height="60" rx="8" fill="#1a1a2e" stroke="#a78bfa" stroke-width="2"/>
+      <text x="615" y="75" font-family="Segoe UI,sans-serif" font-size="14" fill="#c4b5fd" text-anchor="middle" font-weight="700">automation</text>
+      <text x="615" y="93" font-family="Segoe UI,sans-serif" font-size="10" fill="#64748b" text-anchor="middle">controls browser</text>
+
+      <!-- arrow automation → website -->
+      <line x1="670" y1="80" x2="708" y2="80" stroke="#94a3b8" stroke-width="2" stroke-dasharray="5,4" marker-end="url(#arr-site)"/>
+
+      <!-- WEBSITE -->
+      <rect x="710" y="50" width="110" height="60" rx="8" fill="#0f172a" stroke="#334155" stroke-width="2" stroke-dasharray="6,3"/>
+      <text x="765" y="75" font-family="Segoe UI,sans-serif" font-size="13" fill="#64748b" text-anchor="middle" font-weight="700">saucedemo</text>
+      <text x="765" y="93" font-family="Segoe UI,sans-serif" font-size="10" fill="#475569" text-anchor="middle">.com</text>
+
+      <!-- step labels below -->
+      <text x="55"  y="130" font-family="monospace" font-size="9" fill="#334155" text-anchor="middle">①</text>
+      <text x="190" y="130" font-family="monospace" font-size="9" fill="#6366f1" text-anchor="middle">② sends fetch()</text>
+      <text x="330" y="130" font-family="monospace" font-size="9" fill="#38bdf8" text-anchor="middle">③ routes to service</text>
+      <text x="470" y="130" font-family="monospace" font-size="9" fill="#4ade80" text-anchor="middle">④ calls scraper</text>
+      <text x="615" y="130" font-family="monospace" font-size="9" fill="#a78bfa" text-anchor="middle">⑤ opens browser</text>
+      <text x="765" y="130" font-family="monospace" font-size="9" fill="#475569" text-anchor="middle">⑥ real website</text>
+    </svg>
+
+    <div style="text-align:center; font-size:0.78rem; color:#475569; margin-top:4px;">
+      domain is not shown here — it has no role in the flow. It only defines the data shapes that each layer uses.
+    </div>
+  </div>
+
+  <hr class="divider" style="margin-top:0"/>
+
+  <!-- ═══════════════════════════════════════════
+       DIAGRAM 2 — The Main Chain
+  ════════════════════════════════════════════ -->
+  <div class="section-title"><span>Diagram 2 — The Main Dependency Chain</span></div>
+
+  <div class="diagram-chain">
+
+    <!-- UI -->
+    <div class="layer layer-ui">
+      <div class="layer-header">
+        <span class="layer-number">LAYER 5</span>
+        <span class="layer-name">ui</span>
+        <span class="layer-badge badge-top">Outermost — User Sees This</span>
+      </div>
+      <div class="layer-body">
+        <div class="info-block">
+          <div class="info-label">Responsibility</div>
+          <div class="info-content"><ul>
+            <li>React frontend</li>
+            <li>Handles user interactions</li>
+            <li>Displays search, cart, checkout</li>
+            <li>Shows trace steps</li>
+          </ul></div>
+        </div>
+        <div class="info-block">
+          <div class="info-label">Key Files</div>
+          <div class="info-content">
+            <span class="tag tag-file">App.tsx</span>
+            <span class="tag tag-file">SearchScreen.tsx</span>
+            <span class="tag tag-file">CartScreen.tsx</span>
+            <span class="tag tag-file">CheckoutResultScreen.tsx</span>
+            <span class="tag tag-file">Header.tsx</span>
+          </div>
+        </div>
+        <div class="info-block">
+          <div class="info-label">Imports From</div>
+          <div class="info-content">
+            <span class="tag tag-import">api (HTTP fetch calls)</span>
+            <br/><span style="font-size:0.73rem;color:#475569;margin-top:6px;display:block">POST /api/search, /api/buy, /api/checkout</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-wrap">
+      <div class="arrow-line"></div>
+      <div class="arrow-label">depends on</div>
+      <div class="arrow-head"></div>
+    </div>
+
+    <!-- API -->
+    <div class="layer layer-api">
+      <div class="layer-header">
+        <span class="layer-number">LAYER 4</span>
+        <span class="layer-name">api</span>
+      </div>
+      <div class="layer-body">
+        <div class="info-block">
+          <div class="info-label">Responsibility</div>
+          <div class="info-content"><ul>
+            <li>Express HTTP server</li>
+            <li>Exposes REST endpoints</li>
+            <li>Attaches requestId per request</li>
+            <li>Collects trace logs</li>
+          </ul></div>
+        </div>
+        <div class="info-block">
+          <div class="info-label">Key Files</div>
+          <div class="info-content">
+            <span class="tag tag-file">server.ts</span>
+            <span class="tag tag-file">searchRoute.ts</span>
+            <span class="tag tag-file">buyRoute.ts</span>
+            <span class="tag tag-file">checkoutRoute.ts</span>
+            <span class="tag tag-file">TraceCollector.ts</span>
+          </div>
+        </div>
+        <div class="info-block">
+          <div class="info-label">Imports From</div>
+          <div class="info-content">
+            <span class="tag tag-import">services/SearchService</span>
+            <span class="tag tag-import">services/PurchaseService</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-wrap">
+      <div class="arrow-line"></div>
+      <div class="arrow-label">depends on</div>
+      <div class="arrow-head"></div>
+    </div>
+
+    <!-- SERVICES -->
+    <div class="layer layer-services">
+      <div class="layer-header">
+        <span class="layer-number">LAYER 3</span>
+        <span class="layer-name">services</span>
+      </div>
+      <div class="layer-body">
+        <div class="info-block">
+          <div class="info-label">Responsibility</div>
+          <div class="info-content"><ul>
+            <li>All business logic</li>
+            <li>Normalizes raw product data</li>
+            <li>Filters by price / query</li>
+            <li>Applies selection policy</li>
+            <li>Orchestrates buy + checkout</li>
+          </ul></div>
+        </div>
+        <div class="info-block">
+          <div class="info-label">Key Files</div>
+          <div class="info-content">
+            <span class="tag tag-file">SearchService.ts</span>
+            <span class="tag tag-file">PurchaseService.ts</span>
+            <span class="tag tag-file">SelectionPolicy.ts</span>
+          </div>
+        </div>
+        <div class="info-block">
+          <div class="info-label">Imports From</div>
+          <div class="info-content">
+            <span class="tag tag-import">domain/Product</span>
+            <span class="tag tag-import">domain/RawProduct</span>
+            <span class="tag tag-import">domain/Order</span>
+            <span class="tag tag-auto">automation/BaseScraper</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-wrap">
+      <div class="arrow-line"></div>
+      <div class="arrow-label">depends on</div>
+      <div class="arrow-head"></div>
+    </div>
+
+    <!-- DOMAIN -->
+    <div class="layer layer-domain">
+      <div class="layer-header">
+        <span class="layer-number">LAYER 2</span>
+        <span class="layer-name">domain</span>
+        <span class="layer-badge badge-foundation">Innermost — Zero Imports</span>
+      </div>
+      <div class="layer-body">
+        <div class="info-block">
+          <div class="info-label">Responsibility</div>
+          <div class="info-content"><ul>
+            <li>Defines all data shapes</li>
+            <li>Pure TypeScript interfaces</li>
+            <li>No logic — just types</li>
+            <li>Shared by every other layer</li>
+          </ul></div>
+        </div>
+        <div class="info-block">
+          <div class="info-label">Key Files</div>
+          <div class="info-content">
+            <span class="tag tag-file">Product.ts</span>
+            <span class="tag tag-file">RawProduct.ts</span>
+            <span class="tag tag-file">Order.ts</span>
+            <span class="tag tag-file">Cart.ts</span>
+            <span class="tag tag-file">Trace.ts</span>
+          </div>
+        </div>
+        <div class="info-block">
+          <div class="info-label">Imports From</div>
+          <div class="info-content">
+            <span class="tag tag-none">zero imports from other layers</span>
+            <br/><span style="font-size:0.73rem;color:#475569;margin-top:6px;display:block">May import within itself (e.g. Order imports Product). But never imports from automation, services, api, or ui.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <hr class="divider"/>
+
+  <!-- ═══════════════════════════════════════════
+       DIAGRAM 2 — Automation's Position
+  ════════════════════════════════════════════ -->
+  <div class="section-title"><span>Diagram 3 — Where Automation Fits (outside the chain)</span></div>
+
+  <div style="max-width:960px; margin: 0 auto 20px; text-align:center; font-size:0.83rem; color:#64748b; line-height:1.7;">
+    <code style="color:#86efac">automation</code> is <strong style="color:#e2e8f0">not part of the main chain</strong>.
+    Only <code style="color:#86efac">services</code> uses it. It also depends on <code style="color:#fdba74">domain</code> for its types.
+    <br/>This diagram shows only the 3 layers involved.
+  </div>
+
+  <!-- Diagram 2: only services, automation, domain -->
+  <div style="max-width:760px; margin: 0 auto;">
+
+    <svg width="100%" viewBox="0 0 700 420" xmlns="http://www.w3.org/2000/svg" style="display:block; margin-bottom:20px;">
+      <defs>
+        <marker id="arr-purple" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L8,3 z" fill="#a78bfa"/>
+        </marker>
+        <marker id="arr-orange" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L8,3 z" fill="#fb923c"/>
+        </marker>
+      </defs>
+
+      <!-- ── services box (top-left) ── -->
+      <rect x="20" y="20" width="260" height="110" rx="10" fill="#14532d" stroke="#4ade80" stroke-width="2"/>
+      <text x="36" y="48" font-family="Segoe UI,sans-serif" font-size="11" fill="#64748b" font-weight="700" letter-spacing="1">LAYER 3</text>
+      <text x="100" y="48" font-family="Segoe UI,sans-serif" font-size="18" fill="#86efac" font-weight="700">services</text>
+      <text x="36" y="72" font-family="Segoe UI,sans-serif" font-size="12" fill="#94a3b8">— Business logic</text>
+      <text x="36" y="90" font-family="Segoe UI,sans-serif" font-size="12" fill="#94a3b8">— Normalizes products</text>
+      <text x="36" y="108" font-family="Segoe UI,sans-serif" font-size="12" fill="#94a3b8">— Orchestrates buy + checkout</text>
+
+      <!-- ── automation box (top-right) ── -->
+      <rect x="420" y="20" width="260" height="110" rx="10" fill="#1a1a2e" stroke="#a78bfa" stroke-width="2"/>
+      <text x="436" y="48" font-family="Segoe UI,sans-serif" font-size="11" fill="#64748b" font-weight="700" letter-spacing="1">LAYER 1</text>
+      <text x="510" y="48" font-family="Segoe UI,sans-serif" font-size="18" fill="#c4b5fd" font-weight="700">automation</text>
+      <text x="436" y="72" font-family="Segoe UI,sans-serif" font-size="12" fill="#94a3b8">— Controls browser (Playwright)</text>
+      <text x="436" y="90" font-family="Segoe UI,sans-serif" font-size="12" fill="#94a3b8">— Login, search, cart, checkout</text>
+      <text x="436" y="108" font-family="Segoe UI,sans-serif" font-size="12" fill="#94a3b8">— Takes screenshots</text>
+
+      <!-- ── domain box (bottom-center) ── -->
+      <rect x="210" y="290" width="280" height="110" rx="10" fill="#451a03" stroke="#fb923c" stroke-width="2"/>
+      <text x="226" y="318" font-family="Segoe UI,sans-serif" font-size="11" fill="#64748b" font-weight="700" letter-spacing="1">LAYER 2</text>
+      <text x="306" y="318" font-family="Segoe UI,sans-serif" font-size="18" fill="#fdba74" font-weight="700">domain</text>
+      <text x="226" y="342" font-family="Segoe UI,sans-serif" font-size="12" fill="#94a3b8">— Pure TypeScript interfaces</text>
+      <text x="226" y="360" font-family="Segoe UI,sans-serif" font-size="12" fill="#94a3b8">— No logic, only data shapes</text>
+      <text x="226" y="378" font-family="Segoe UI,sans-serif" font-size="12" fill="#fb923c" font-weight="600">— Zero imports from anywhere</text>
+
+      <!-- ── Arrow: services → automation ── -->
+      <line x1="280" y1="75" x2="418" y2="75" stroke="#a78bfa" stroke-width="2" marker-end="url(#arr-purple)"/>
+      <rect x="296" y="55" width="108" height="18" rx="4" fill="#0f1117"/>
+      <text x="350" y="68" font-family="monospace" font-size="11" fill="#a78bfa" text-anchor="middle">uses automation</text>
+
+      <!-- ── Arrow: services → domain ── -->
+      <line x1="150" y1="130" x2="310" y2="288" stroke="#fb923c" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#arr-orange)"/>
+      <rect x="158" y="190" width="120" height="18" rx="4" fill="#0f1117"/>
+      <text x="218" y="203" font-family="monospace" font-size="11" fill="#fb923c" text-anchor="middle">uses domain types</text>
+
+      <!-- ── Arrow: automation → domain ── -->
+      <line x1="550" y1="130" x2="392" y2="288" stroke="#fb923c" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#arr-orange)"/>
+      <rect x="430" y="190" width="120" height="18" rx="4" fill="#0f1117"/>
+      <text x="490" y="203" font-family="monospace" font-size="11" fill="#fb923c" text-anchor="middle">uses domain types</text>
+
+      <!-- ── "NOT connected" labels ── -->
+      <text x="350" y="170" font-family="Segoe UI,sans-serif" font-size="11" fill="#334155" text-anchor="middle">ui and api are NOT shown here</text>
+      <text x="350" y="186" font-family="Segoe UI,sans-serif" font-size="11" fill="#334155" text-anchor="middle">— they have no connection to automation</text>
+    </svg>
+
+  </div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <h3>Legend</h3>
+    <div class="legend-grid">
+      <div class="legend-item"><div class="legend-dot" style="background:#6366f1"></div> ui — React frontend (outermost)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#38bdf8"></div> api — Express HTTP server</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#4ade80"></div> services — Business logic</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#fb923c"></div> domain — Data types (innermost)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#a78bfa"></div> automation — Browser (outside the chain)</div>
+      <div class="legend-item" style="color:#64748b">solid arrow = imports from &nbsp;|&nbsp; dashed = uses types</div>
+    </div>
+  </div>
+
+  <!-- Rules -->
+  <div class="rule-block">
+    <h3>Architecture Rules</h3>
+    <ul>
+      <li>The main chain flows one way: ui → api → services → domain</li>
+      <li>automation is a side branch — only services uses it, no other layer</li>
+      <li>domain has zero imports from other layers — it may import within itself (e.g. Order imports Product)</li>
+      <li>To add a new site: extend BaseScraper — never modify it (Open/Closed Principle)</li>
+      <li>Every layer is a class (OOP). One class per file.</li>
+    </ul>
+  </div>
+
+</body>
+</html>
